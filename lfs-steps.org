@@ -1,0 +1,140 @@
+#+title: creation of katha linux. The name refers to Katha Upanishad.
+#+author: Dinabandhu Khatiwada
+
+* First Steps 
+This document is just a personal companion to the main LFS resources and is not exhaustive at all.
+Refer to those first. The version being used is 12.3. See also errata
+and bugfixes, security updates.
+
+add /export LFS=your/chosen/directory/ to .bashrc or .zshrc because I closed a terminal session and caused a lot of confusion thereafter.
+
+* Complete zsh history is available at the bottom but it can be confusing since i'm sometimes repeating commands to correct mistakes
+
+** Check host system requirements
+All requirements fullfilled
+** Creating a partition
+
+Created a 25GB primary and 4GB swap partition on manjaro inside qemu using gparted.
+The original disk was 50GB so the host manjaro now has 20 GB only after resizing.
+
+Also extended the primary qemu disk from 50 GB to 90 GB with following steps:
+- Turn off the VM and ensure no snapshots exist
+- on the host run /sudo qemu-img resize /path/to/disk/image.qcow +40G/
+- boot into the VM and run
+  - install cloud-guest-utils via your distributions package manager.
+    - I'm on manjaro so /sudo pamac install cloud-guest-utils/
+  - /lsblk/
+  - /sudo growpart /dev/vda 1/ in my case the root partition is 1, yours could be different so see the output of lsblk
+  - I used gparted on manjaro to create other convenience partitions
+*** Convenience partitions
+ i wont create /usr because /initramfs (not covered by LFS) will be needed to boot a system with a separate /usr partition./ and /tmp/
+ - create the 400MB boot partition first and flag as boot
+ - 25 GB home partiton
+ - 1GB fat32 uefi partition
+ - 30GB /usr/src partition
+ - 13GB /opt partition
+**** Efi partition
+- I created 1024 fat32 MiB partition as said in [[https://wiki.archlinux.org/title/EFI_system_partition][AUR efi filesystem partition]]
+- installed dosfstools and mtools for gparted to read that partition
+- flagged that partition as esp after partitioning
+- ran
+#+src: bash
+sudo mkfs.fat -F 32 /dev/vda4                                 
+
+[sudo] password for katha: 
+mkfs.fat 4.2 (2021-01-31)
+#+end_src
+
+[[https://askubuntu.com/a/1313158][Optimal EFI partition size]]
+
+** Setting LFS variable and Umask
+- /export LFS=/mnt/lfs/
+- umask 022
+
+
+** Mounting the partitions
+
+#+begin_src: bash
+mkdir -pv $LFS
+sudo mount -v -t ext4 /dev/vda8 $LFS
+sudo mkdir -v -p $LFS/boot
+sudo mount -v -t ext4 /dev/vda7 $LFS/boot
+sudo mkdir -v -p $LFS/usr/src
+sudo mount -v -t ext4 /dev/vda6 $LFS/usr/src
+sudo mkdir -v -p $LFS/opt
+sudo mount -v -t ext4 /dev/vda9 $LFS/opt
+sudo mkdir -v -p $LFS/efi
+sudo mount -v -t vfat /dev/vda5 $LFS/efi   
+#+end_src
+
+#+begin_src: bash
+ sudo mkdir -pv $LFS                                              ✔ 
+sudo mount -v -t ext4 /dev/vda8 $LFS
+sudo mkdir -v -p $LFS/boot
+sudo mount -v -t ext4 /dev/vda7 $LFS/boot
+sudo mkdir -v -p $LFS/usr/src
+sudo mount -v -t ext4 /dev/vda6 $LFS/usr/src
+sudo mkdir -v -p $LFS/opt
+sudo mount -v -t ext4 /dev/vda9 $LFS/opt
+sudo mkdir -v -p $LFS/efi
+sudo mount -v -t vfat /dev/vda5 $LFS/efi   
+
+[sudo] password for katha: 
+mkdir: created directory '/mnt/lfs'
+mount: /dev/vda8 mounted on /mnt/lfs.
+mount: /dev/vda7 mounted on /mnt/lfs/boot.
+mount: /dev/vda6 mounted on /mnt/lfs/usr/src.
+mount: /dev/vda9 mounted on /mnt/lfs/opt.
+mount: /dev/vda5 mounted on /mnt/lfs/efi.
+    ~  lsblk                                                     ✔  4s  
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sr0     11:0    1 1024M  0 rom  
+vda    254:0    0   90G  0 disk 
+├─vda1 254:1    0   20G  0 part /home
+│                               /var/cache
+│                               /var/log
+│                               /
+├─vda2 254:2    0    1K  0 part 
+├─vda5 254:5    0    1G  0 part /mnt/lfs/efi
+├─vda6 254:6    0   30G  0 part /mnt/lfs/usr/src
+├─vda7 254:7    0  500M  0 part /mnt/lfs/boot
+├─vda8 254:8    0 24.9G  0 part /mnt/lfs
+└─vda9 254:9    0 13.6G  0 part /mnt/lfs/opt
+
+#+end_src
+
+mount command yields
+
+#+begin_src: bash
+/dev/vda8 on /mnt/lfs type ext4 (rw,relatime)
+/dev/vda7 on /mnt/lfs/boot type ext4 (rw,relatime)
+/dev/vda6 on /mnt/lfs/usr/src type ext4 (rw,relatime)
+/dev/vda9 on /mnt/lfs/opt type ext4 (rw,relatime)
+/dev/vda5 on /mnt/lfs/efi type vfat (rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro)
+#+end_src
+
+
+
+
+** Packages and patches
+- Download and verify md5 hashes
+- then run /chown root:root $LFS/sources/*/
+- always make sure /usr/lib64 doesn't appear as said in the LFS book
+
+
+** Adding LFS User
+
+
+
+
+
+
+
+
+
+#+begin_src: bash
+put complete zsh history here
+#+end_src
+
+
+** Final preparation
