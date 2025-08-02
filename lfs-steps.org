@@ -9,6 +9,9 @@ and bugfixes, security updates.
 add /export LFS=your/chosen/directory/ but it's recommended to use
 ~export LFS=/mnt/lfs~ to .bashrc or .zshrc. It will alleviate a lot of confusion thereafter.
 
+(optional)Install spice-vdagent to copy clipboard to and from host to
+guest machine. Taking notes, documenting on the host for convenience.
+
 
 ** Check host system requirements
 All requirements fullfilled
@@ -188,6 +191,11 @@ EOF
 source ~/.bash_profile
 #+end_src
 
-* Mistakes I made
-  - should have went into the glibc folder before creating symlinks
-    but didn't and broke Manjaro symlinks on qemu. Had to reinstall
+* Mistakes made
+  - Never use relative paths with symbolic links as shown in section
+    5.5 Glibc-2.4.1. I've broken Manjaro on qemu thrice with the
+    error
+    #+begin_src
+too may levels of symbolic links
+    #+end_src
+
