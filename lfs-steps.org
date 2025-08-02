@@ -2,7 +2,7 @@
 #+author: Dinabandhu Khatiwada
 
 * First Steps 
-This document is just a personal companion to the main LFS resources and is not exhaustive at all.
+This document is a personal companion to the main LFS resources and is not exhaustive at all.
 Refer to those first. The version being used is 12.3. See also errata
 and bugfixes, security updates.
 
@@ -38,9 +38,8 @@ Also extended the primary qemu disk from 50 GB to 90 GB with following steps:
 - installed dosfstools and mtools for gparted to read that partition
 - flagged that partition as esp after partitioning
 - ran
-#+src: bash
-sudo mkfs.fat -F 32 /dev/vda4                                 
-
+#+begin_src bash
+sudo mkfs.fat -F 32 /dev/vda4
 [sudo] password for katha: 
 mkfs.fat 4.2 (2021-01-31)
 #+end_src
@@ -54,7 +53,7 @@ mkfs.fat 4.2 (2021-01-31)
 
 ** Mounting the partitions
 
-#+begin_src: bash
+#+begin_src bash
 mkdir -pv $LFS
 sudo mount -v -t ext4 /dev/vda8 $LFS
 sudo mkdir -v -p $LFS/boot
@@ -67,8 +66,8 @@ sudo mkdir -v -p $LFS/efi
 sudo mount -v -t vfat /dev/vda5 $LFS/efi   
 #+end_src
 
-#+begin_src: bash
- sudo mkdir -pv $LFS                                              ✔ 
+#+begin_src bash
+sudo mkdir -pv $LFS
 sudo mount -v -t ext4 /dev/vda8 $LFS
 sudo mkdir -v -p $LFS/boot
 sudo mount -v -t ext4 /dev/vda7 $LFS/boot
@@ -86,7 +85,7 @@ mount: /dev/vda7 mounted on /mnt/lfs/boot.
 mount: /dev/vda6 mounted on /mnt/lfs/usr/src.
 mount: /dev/vda9 mounted on /mnt/lfs/opt.
 mount: /dev/vda5 mounted on /mnt/lfs/efi.
-    ~  lsblk                                                     ✔  4s  
+lsblk
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sr0     11:0    1 1024M  0 rom  
 vda    254:0    0   90G  0 disk 
@@ -105,7 +104,7 @@ vda    254:0    0   90G  0 disk
 
 mount command yields
 
-#+begin_src: bash
+#+begin_src bash
 /dev/vda8 on /mnt/lfs type ext4 (rw,relatime)
 /dev/vda7 on /mnt/lfs/boot type ext4 (rw,relatime)
 /dev/vda6 on /mnt/lfs/usr/src type ext4 (rw,relatime)
@@ -120,21 +119,75 @@ mount command yields
 - Download and verify md5 hashes
 - then run /chown root:root $LFS/sources/*/
 - always make sure /usr/lib64 doesn't appear as said in the LFS book
+- ~chown root:root $LFS/sources/*~
+- 
 
+* Final preparation
+
+** Creating dir layout
+   Done
 
 ** Adding LFS User
-
-
-
-
-
-
-
-
-
-#+begin_src: bash
-put complete zsh history here
+#+begin_src bash
+groupadd lfs
+useradd -s /bin/bash -g lfs -m -k /dev/null lfs
 #+end_src
 
+#+begin_src
+passwd lfs
+#+end_src
 
-** Final preparation
+#+begin_src
+chown -v lfs $LFS/{usr{,/*},var,etc,tools}
+case $(uname -m) in
+  x86_64) chown -v lfs $LFS/lib64 ;;
+esac
+#+end_src
+
+#+begin_sr
+su - lfs
+#+end_src
+   after adding lfs user make sure to add this line to /etc/sudoers:
+    ~%lfs ALL=(ALL) NOPASSWD: ALL~
+    thanks to [[https://www.linuxquestions.org/questions/linux-from-scratch-13/lfs-is-not-in-sudoers-file-error-in-lfs-6-6-a-813646/#post4904970][this linuxquestions.org forum answer]]
+
+** Setting up Environment
+   #+begin_src
+cat > ~/.bash_profile << "EOF"
+exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
+EOF
+   #+end_src
+
+#+begin_src
+cat > ~/.bashrc << "EOF"
+set +h
+umask 022
+LFS=/mnt/lfs
+LC_ALL=POSIX
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+PATH=/usr/bin
+if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
+PATH=$LFS/tools/bin:$PATH
+CONFIG_SITE=$LFS/usr/share/config.site
+export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
+EOF
+#+end_src
+
+Execute this as root to avoid environment pollution by manjaro host
+#+begin_src
+[ ! -e /etc/bash.bashrc ] || mv -v /etc/bash.bashrc /etc/bash.bashrc.NOUSE
+#+end_src
+
+I'll be using 5 cores on the VM out of 6 so as not to freeze
+#+begin_src
+cat >> ~/.bashrc << "EOF"
+export MAKEFLAGS=-j5
+EOF
+#+end_src
+#+begin_src
+source ~/.bash_profile
+#+end_src
+
+* Mistakes I made
+  - should have went into the glibc folder before creating symlinks
+    but didn't and broke Manjaro symlinks on qemu. Had to reinstall
