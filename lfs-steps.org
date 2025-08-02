@@ -1,4 +1,4 @@
-#+title: creation of katha linux. The name refers to Katha Upanishad.
+#+title: creation of katha linux.
 #+author: Dinabandhu Khatiwada
 
 * First Steps 
@@ -190,6 +190,13 @@ EOF
 #+begin_src
 source ~/.bash_profile
 #+end_src
+
+** Chapter5 Cross compiling a toolchain
+- ran ~sudo chown -R lfs:lfs $LFS~ and ~sudo chown -R lfs:lfs $LFS/tools~
+- that fixed the need to do everything as sudo. sudo install of Glibc would have broken the final system for sure
+- 
+
+
 
 * Mistakes made
   - These are my speculations mostly
