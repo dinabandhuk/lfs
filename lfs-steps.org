@@ -6,9 +6,9 @@ This document is a personal companion to the main LFS resources and is not exhau
 Refer to those first. The version being used is 12.3. See also errata
 and bugfixes, security updates.
 
-add /export LFS=your/chosen/directory/ to .bashrc or .zshrc because I closed a terminal session and caused a lot of confusion thereafter.
+add /export LFS=your/chosen/directory/ but it's recommended to use
+~export LFS=/mnt/lfs~ to .bashrc or .zshrc. It will alleviate a lot of confusion thereafter.
 
-* Complete zsh history is available at the bottom but it can be confusing since i'm sometimes repeating commands to correct mistakes
 
 ** Check host system requirements
 All requirements fullfilled
