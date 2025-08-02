@@ -57,7 +57,7 @@ mkfs.fat 4.2 (2021-01-31)
 ** Mounting the partitions
 
 #+begin_src bash
-mkdir -pv $LFS
+sudo mkdir -pv $LFS
 sudo mount -v -t ext4 /dev/vda8 $LFS
 sudo mkdir -v -p $LFS/boot
 sudo mount -v -t ext4 /dev/vda7 $LFS/boot
@@ -192,6 +192,7 @@ source ~/.bash_profile
 #+end_src
 
 * Mistakes made
+  - These are my speculations mostly
   - Never use relative paths with symbolic links as shown in section
     5.5 Glibc-2.4.1. I've broken Manjaro on qemu thrice with the
     error
@@ -199,3 +200,31 @@ source ~/.bash_profile
 too may levels of symbolic links
     #+end_src
 
+    Not really. Seems the /mnt/lfs/lib64 folder that had to be created was not created properly.
+    On top I ran the script
+    #+begin_src bash
+       case $(uname -m) in
+          i?86)   ln -sfv ld-linux.so.2 $LFS/lib/ld-lsb.so.3
+          ;;
+          x86_64) ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
+                  ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.3
+          ;;
+      esac
+    #+end_src
+    with sudo so it created symlink mess and broke manjaro. When I created dirs with
+    #+begin_src bash
+      mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin}
+
+      for i in bin lib sbin; do
+        ln -sv usr/$i $LFS/$i
+      done
+
+      case $(uname -m) in
+        x86_64) mkdir -pv $LFS/lib64 ;;
+      esac
+    #+end_src
+
+    #+begin_src bash
+      sudo mkdir /mnt/lfs/lib64
+    #+end_src
+    and ensured ~lib64/~ was really there there were no problems with the symbolic links.
