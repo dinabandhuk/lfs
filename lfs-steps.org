@@ -197,22 +197,7 @@ source ~/.bash_profile
 
 
 *** Compiling bash 5.2.37
-- gcc 15 breaks this bash5.2.37 version so I'm compiling with gcc 13 and installing it alongside with the steps as [[https://accelsnow.com/Manjaro-install-multiple-GCC-versions][said here on accelsnow]]
-  #+begin_src bash
-    git clone https://gcc.gnu.org/git/gcc.git gcc-source
-    cd gcc-source/
-    git fetch --all --tags --prune
-    git checkout tags/<tag_name> -b <branch_name>
-    mkdir ../gcc-build
-    cd ../gcc-build
-    ./../gcc-source/configure --prefix=<install location> --enable-languages=c,c++
-    make -j16
-    make install
-  #+end_src
-  insted of cloning the repo I'll get gcc 13.3.0 via their release mirrors and build with prefix gcc13 as outlined above
-  #+begin_src bash
-    https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-13.3.0/
-  #+end_src
+- 
 
 
 
