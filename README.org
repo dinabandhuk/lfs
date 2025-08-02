@@ -6,6 +6,8 @@ This document is a personal companion to the main LFS resources and is not exhau
 Refer to those first. The version being used is 12.3. See also errata
 and bugfixes, security updates.
 
+Done on Debian 12.11.0 bookworm as host on a virtual machine.
+
 add /export LFS=your/chosen/directory/ but it's recommended to use
 ~export LFS=/mnt/lfs~ to .bashrc or .zshrc. It will alleviate a lot of confusion thereafter.
 
@@ -30,7 +32,7 @@ Also extended the primary qemu disk from 50 GB to 90 GB with following steps:
   - /sudo growpart /dev/vda 1/ in my case the root partition is 1, yours could be different so see the output of lsblk
   - I used gparted on manjaro to create other convenience partitions
 *** Convenience partitions
- i wont create /usr because /initramfs (not covered by LFS) will be needed to boot a system with a separate /usr partition./ and /tmp/
+ i wont create //usr because /initramfs (not covered by LFS) will be needed to boot a system with a separate /usr partition./ and /tmp/
  - create the 400MB boot partition first and flag as boot
  - 25 GB home partiton
  - 1GB fat32 uefi partition
@@ -70,18 +72,6 @@ sudo mount -v -t vfat /dev/vda5 $LFS/efi
 #+end_src
 
 #+begin_src bash
-sudo mkdir -pv $LFS
-sudo mount -v -t ext4 /dev/vda8 $LFS
-sudo mkdir -v -p $LFS/boot
-sudo mount -v -t ext4 /dev/vda7 $LFS/boot
-sudo mkdir -v -p $LFS/usr/src
-sudo mount -v -t ext4 /dev/vda6 $LFS/usr/src
-sudo mkdir -v -p $LFS/opt
-sudo mount -v -t ext4 /dev/vda9 $LFS/opt
-sudo mkdir -v -p $LFS/efi
-sudo mount -v -t vfat /dev/vda5 $LFS/efi   
-
-[sudo] password for katha: 
 mkdir: created directory '/mnt/lfs'
 mount: /dev/vda8 mounted on /mnt/lfs.
 mount: /dev/vda7 mounted on /mnt/lfs/boot.
@@ -132,63 +122,69 @@ mount command yields
 
 ** Adding LFS User
 #+begin_src bash
-groupadd lfs
-useradd -s /bin/bash -g lfs -m -k /dev/null lfs
+  groupadd lfs
+  useradd -s /bin/bash -g lfs -m -k /dev/null lfs
 #+end_src
 
-#+begin_src
-passwd lfs
+#+begin_src bash
+  passwd lfs
 #+end_src
 
-#+begin_src
-chown -v lfs $LFS/{usr{,/*},var,etc,tools}
-case $(uname -m) in
-  x86_64) chown -v lfs $LFS/lib64 ;;
-esac
+#+begin_src bash
+  chown -v lfs $LFS/{usr{,/*},var,etc,tools}
+  case $(uname -m) in
+    x86_64) chown -v lfs $LFS/lib64 ;;
+  esac
 #+end_src
 
-#+begin_sr
-su - lfs
+#+begin_src bash
+  su - lfs
 #+end_src
    after adding lfs user make sure to add this line to /etc/sudoers:
     ~%lfs ALL=(ALL) NOPASSWD: ALL~
     thanks to [[https://www.linuxquestions.org/questions/linux-from-scratch-13/lfs-is-not-in-sudoers-file-error-in-lfs-6-6-a-813646/#post4904970][this linuxquestions.org forum answer]]
-
-** Setting up Environment
-   #+begin_src
-cat > ~/.bash_profile << "EOF"
-exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
-EOF
+- do this to avoid having to use sudo which might break glibc and
+    further installs
+   #+begin_src bash
+     sudo chown -R lfs:lfs $LFS
+     sudo chown -R lfs:lfs $LFS/tools
    #+end_src
 
-#+begin_src
-cat > ~/.bashrc << "EOF"
-set +h
-umask 022
-LFS=/mnt/lfs
-LC_ALL=POSIX
-LFS_TGT=$(uname -m)-lfs-linux-gnu
-PATH=/usr/bin
-if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
-PATH=$LFS/tools/bin:$PATH
-CONFIG_SITE=$LFS/usr/share/config.site
-export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
-EOF
+** Setting up Environment
+   #+begin_src bash
+     cat > ~/.bash_profile << "EOF"
+     exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
+     EOF
+   #+end_src
+
+#+begin_src bash
+  cat > ~/.bashrc << "EOF"
+  set +h
+  umask 022
+  LFS=/mnt/lfs
+  LC_ALL=POSIX
+  LFS_TGT=$(uname -m)-lfs-linux-gnu
+  PATH=/usr/bin
+  if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
+  PATH=$LFS/tools/bin:$PATH
+  CONFIG_SITE=$LFS/usr/share/config.site
+  export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
+  EOF
 #+end_src
 
 Execute this as root to avoid environment pollution by manjaro host
-#+begin_src
+#+begin_src bash
 [ ! -e /etc/bash.bashrc ] || mv -v /etc/bash.bashrc /etc/bash.bashrc.NOUSE
 #+end_src
 
 I'll be using 5 cores on the VM out of 6 so as not to freeze
-#+begin_src
-cat >> ~/.bashrc << "EOF"
-export MAKEFLAGS=-j5
-EOF
+#+begin_src bash
+  cat >> ~/.bashrc << "EOF"
+  export MAKEFLAGS=-j5
+  EOF
 #+end_src
-#+begin_src
-source ~/.bash_profile
+#+begin_src bash
+  source ~/.bash_profile
 #+end_src
 
 ** Chapter5 Cross compiling a toolchain
@@ -208,8 +204,8 @@ source ~/.bash_profile
   - Never use relative paths with symbolic links as shown in section
     5.5 Glibc-2.4.1. I've broken Manjaro on qemu thrice with the
     error
-    #+begin_src
-too may levels of symbolic links
+    #+begin_src bash
+      too may levels of symbolic links
     #+end_src
 
     Not really. Seems the /mnt/lfs/lib64 folder that had to be created was not created properly.
@@ -239,4 +235,5 @@ too may levels of symbolic links
     #+begin_src bash
       sudo mkdir /mnt/lfs/lib64
     #+end_src
-    and ensured ~lib64/~ was really there there were no problems with the symbolic links.
+  and ensured ~lib64/~ was really there, then there were no problems
+  with the symbolic links.
