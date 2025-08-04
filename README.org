@@ -13,15 +13,12 @@ Done on Debian 12.11.0 bookworm as host which itself is a VM inside qemu.
 add /export LFS=your/chosen/directory/ but it's recommended to use
 ~export LFS=/mnt/lfs~ to .bashrc or .zshrc. It will alleviate a lot of confusion thereafter.
 
-<<<<<<< HEAD
-=======
 (optional)Install spice-vdagent to copy clipboard to and from host to
 guest machine. Taking notes, documenting on the host for convenience.
 
 - when directed some action as root user, actually login as root user via
   ~su~. into ~[root@debian]#~ . Issuing ~sudo someuser <command>~ will cause ownership issues later on.
 
->>>>>>> origin/main
 ** Check host system requirements
    All requirements fullfilled
 
@@ -228,3 +225,5 @@ I'll be using 5 cores on the VM out of 6 so as not to freeze
     with the symbolic links.
   - Issued sudo commands as another user(incorrect) instead of logging into superuser shell as root via
     ~su~ and issuing commands as root ~root@debian #~ (correct).
+
+And so on and so forth...
